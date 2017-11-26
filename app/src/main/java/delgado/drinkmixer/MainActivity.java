@@ -12,6 +12,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
@@ -61,9 +62,9 @@ public class MainActivity extends AppCompatActivity {
         ActionBar actionBar = getSupportActionBar();
         actionBar.show();
 
-        listView = (ListView) findViewById(R.id.listView);
-        nameText = (EditText) findViewById(R.id.nameText);
-        progressBar = (ProgressBar) findViewById(R.id.progressBar);
+        listView = findViewById(R.id.listView);
+        nameText = findViewById(R.id.nameText);
+        progressBar = findViewById(R.id.progressBar);
         adapter = new DrinkAdapter(this, R.layout.activity_listview, drinks);
         listView.setAdapter(adapter);
 
@@ -82,6 +83,17 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 new RetrieveFeedTask().execute();
                 drinks.clear();
+            }
+        });
+
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position,
+                                    long id) {
+                Intent intent = new Intent(MainActivity.this, DrinkDetailsActivity.class);
+                Drink drink = drinks.get(position);
+                intent.putExtra("drink", drink);
+                startActivity(intent);
             }
         });
     }
@@ -158,8 +170,6 @@ public class MainActivity extends AppCompatActivity {
 
     class RetrieveFeedTask extends AsyncTask<Void, Void, String> {
 
-        private Exception exception;
-
         protected void onPreExecute() {
             progressBar.setVisibility(View.VISIBLE);
         }
@@ -196,8 +206,7 @@ public class MainActivity extends AppCompatActivity {
                 response = "There was a problem retrieving data from the database.";
             }
             progressBar.setVisibility(View.GONE);
-            //Log.i("INFO", response);
-            //responseView.setText(response);
+
             try {
                 JSONArray drinksJSONArray = ((JSONObject) new JSONTokener(response).nextValue()).getJSONArray("drinks");
                 for (int i = 0; i < drinksJSONArray.length(); i++) {

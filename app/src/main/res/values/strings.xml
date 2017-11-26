@@ -3,4 +3,7 @@
     <string name="search_hint">Enter drink name</string>
     <string name="search">Search</string>
     <string name="no_bluetooth">This device does not support Bluetooth.</string>
+    <string name="ingredient1">Ingredient 1</string>
+    <string name="ingredient2">Ingredient 2</string>
+    <string name="ingredient3">Ingredient 3</string>
 </resources>

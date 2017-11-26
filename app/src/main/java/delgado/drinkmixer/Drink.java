@@ -3,11 +3,13 @@ package delgado.drinkmixer;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.Serializable;
+
 /**
  * Created by Kath on 11/13/2017.
  */
 
-public class Drink {
+public class Drink implements Serializable {
     private String name;
     private String thumbnail;
     private String ingredient1;
