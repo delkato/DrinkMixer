@@ -45,4 +45,13 @@
         android:text="@string/ingredient3"
         android:textAppearance="@style/TextAppearance.AppCompat.Body2" />
 
+    <Button
+        android:id="@+id/button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:onClick="sendDataToArduino"
+        android:text="@string/send_data" />
+
 </RelativeLayout>

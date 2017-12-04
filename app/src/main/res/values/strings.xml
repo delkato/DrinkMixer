@@ -6,4 +6,5 @@
     <string name="ingredient1">Ingredient 1</string>
     <string name="ingredient2">Ingredient 2</string>
     <string name="ingredient3">Ingredient 3</string>
+    <string name="send_data">Send Data</string>
 </resources>

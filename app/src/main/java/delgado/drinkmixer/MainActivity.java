@@ -1,23 +1,17 @@
 package delgado.drinkmixer;
 
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.ProgressBar;
-import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -25,33 +19,19 @@ import org.json.JSONObject;
 import org.json.JSONTokener;
 
 import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
-import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity {
     static final String TAG = "MainActivity";
-    private final String DEVICE_ADDRESS="00:06:66:DC:84:5E";
-    private static final UUID PORT_UUID = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb");
     EditText nameText;
     ListView listView;
     ProgressBar progressBar;
     static final String API_KEY = "1";
     static final String API_URL = "http://www.thecocktaildb.com/api/json/v1/";
-    private BluetoothAdapter mBluetoothAdapter = null;
-    private Set<BluetoothDevice> pairedDevices;
-    private BluetoothSocket socket;
-    private OutputStream outputStream;
-    private InputStream inputStream;
-    private boolean found;
-    private boolean connected = false;
     DrinkAdapter adapter;
     List<Drink> drinks = new ArrayList<>();
 
@@ -67,15 +47,6 @@ public class MainActivity extends AppCompatActivity {
         progressBar = findViewById(R.id.progressBar);
         adapter = new DrinkAdapter(this, R.layout.activity_listview, drinks);
         listView.setAdapter(adapter);
-
-        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        if (mBluetoothAdapter == null) {
-            Toast.makeText(this, R.string.no_bluetooth, Toast.LENGTH_SHORT).show();
-        }
-        if (!mBluetoothAdapter.isEnabled()) {
-            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            startActivityForResult(enableBtIntent, 1);
-        }
 
         Button queryButton = (Button) findViewById(R.id.queryButton);
         queryButton.setOnClickListener(new View.OnClickListener() {
@@ -96,76 +67,6 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.action_bluetooth, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == R.id.action_bluetooth) {
-            toggleBluetooth();
-            return true;
-        }
-        return false;
-    }
-
-    private void toggleBluetooth() {
-        pairedDevices = mBluetoothAdapter.getBondedDevices();
-        ArrayList list = new ArrayList();
-        BluetoothDevice device = null;
-
-        if (pairedDevices.size()>0) {
-            for(BluetoothDevice bt : pairedDevices) {
-                if (bt.getAddress().equals(DEVICE_ADDRESS)) {
-                    device = bt;
-                    found = true;
-                    break;
-                }
-            }
-        }
-        else {
-            Toast.makeText(getApplicationContext(), "No Paired Bluetooth Devices Found.", Toast.LENGTH_SHORT).show();
-            found = false;
-        }
-        if (found && !connected) {
-            connected = true;
-            try {
-                socket = device.createRfcommSocketToServiceRecord(PORT_UUID);
-                socket.connect();
-                Toast.makeText(getApplicationContext(), "Connected!", Toast.LENGTH_SHORT).show();
-            } catch (IOException e) {
-                e.printStackTrace();
-                connected=false;
-            }
-            if (connected) {
-                try {
-                    outputStream = socket.getOutputStream();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                try {
-                    inputStream = socket.getInputStream();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-
-            }
-        } else if (found) {
-            try {
-                outputStream.close();
-                inputStream.close();
-                socket.close();
-                Toast.makeText(getApplicationContext(), "Disconnected!", Toast.LENGTH_LONG).show();
-                connected = false;
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
     }
 
     class RetrieveFeedTask extends AsyncTask<Void, Void, String> {
