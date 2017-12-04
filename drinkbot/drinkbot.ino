@@ -14,6 +14,11 @@ int bluetoothTx = 2;  // TX-O pin of bluetooth mate, Arduino D2
 int bluetoothRx = 3;  // RX-I pin of bluetooth mate, Arduino D3
 
 int incomingByte;
+int measure1;
+int measure2;
+int measure3;
+int number;
+int count;
 
 SoftwareSerial bluetooth(bluetoothTx, bluetoothRx);
 
@@ -35,11 +40,36 @@ void setup() {
   pinMode(pushButton, INPUT_PULLUP);
   pinMode(relay, INPUT);
   pinMode(ledGreen, OUTPUT);
-  pinMode(ledRed, OUTPUT);  
+  pinMode(ledRed, OUTPUT);
+  count = 0;
 }
 
 // the loop routine runs over and over again forever:
 void loop() {
+  if (bluetooth.available()) {
+    char incomingByte = (char)bluetooth.read();
+    // new drink measurement marker
+    if (incomingByte == 'D') {
+      count++;
+      // we got to the second measurement
+      if (count == 2) {
+        measure1 = number;
+        number = 0;
+      // we got to the third measurement
+      } else if (count == 3) {
+        measure2 = number;
+        number = 0;
+      }
+    // no more numbers
+    } else if (incomingByte == 'E') {
+      measure3 = number;
+      number = 0;
+      count = 0;
+    } else {
+      number = (number * 10) + (incomingByte - '0');
+    }
+  }
+  
   // read the input pin:
   pastState = buttonState;
   buttonState = digitalRead(pushButton);
@@ -58,15 +88,6 @@ void loop() {
     digitalWrite(ledRed, HIGH);
   }
   
-  if (Serial.available() > 0) {
-    // read the oldest byte in the serial buffer:
-    incomingByte = Serial.read();
-    // if it's a capital R, reset the counter
-    if (incomingByte == '1') {
-      //pump
-
-    }
-  }
   // print out the state of the button:
   delay(1);        // delay in between reads for stability
 }
