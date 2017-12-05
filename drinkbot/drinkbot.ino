@@ -5,13 +5,15 @@ int pastState;
 int buttonState;
 
 int relay = 12;
+int pumpOne = 8;
+int pumpTwo = 9;
+int pumpThree = 10;
 
 int ledGreen = 4;
-int ledRed = 3;
-int pushButton = 5;
+int ledRed = 6;
 
-int bluetoothTx = 2;  // TX-O pin of bluetooth mate, Arduino D2
-int bluetoothRx = 3;  // RX-I pin of bluetooth mate, Arduino D3
+int bluetoothTx = 2;
+int bluetoothRx = 3;
 
 int incomingByte;
 int measure1;
@@ -19,6 +21,8 @@ int measure2;
 int measure3;
 int number;
 int count;
+boolean busy;
+boolean readyToPump;
 
 SoftwareSerial bluetooth(bluetoothTx, bluetoothRx);
 
@@ -37,16 +41,29 @@ void setup() {
 
   
   // make the pushbutton's pin an input:
-  pinMode(pushButton, INPUT_PULLUP);
   pinMode(relay, INPUT);
   pinMode(ledGreen, OUTPUT);
   pinMode(ledRed, OUTPUT);
+  pinMode(pumpOne, OUTPUT);
+  pinMode(pumpTwo, OUTPUT);
+  pinMode(pumpThree, OUTPUT);
   count = 0;
+  busy = false;
+  readyToPump = false;
+  measure1 = 0;
+  measure2 = 0;
+  measure3 = 0;
+  digitalWrite(pumpOne, HIGH); // set to high for pumps to be off
+  digitalWrite(pumpTwo, HIGH);
+  digitalWrite(pumpThree, HIGH);
+  digitalWrite(ledGreen, LOW); // led green when pumping
+  digitalWrite(ledRed, HIGH); // led red when not pumping
 }
 
 // the loop routine runs over and over again forever:
 void loop() {
   if (bluetooth.available()) {
+    readyToPump = false;
     char incomingByte = (char)bluetooth.read();
     // new drink measurement marker
     if (incomingByte == 'D') {
@@ -65,29 +82,62 @@ void loop() {
       measure3 = number;
       number = 0;
       count = 0;
+      readyToPump = true;
     } else {
       number = (number * 10) + (incomingByte - '0');
     }
   }
-  
-  // read the input pin:
-  pastState = buttonState;
-  buttonState = digitalRead(pushButton);
 
   int relayState = digitalRead(relay);
-  Serial.println(relayState);
 
-  if (buttonState == 0 && pastState == 1) {
-    led_on = led_on ^ 1;
-    digitalWrite(ledGreen, led_on);    
-  }
-
-  if (digitalRead(ledGreen) == LOW) {
+  // wait for all bluetooth data to be received before pumping
+  if (readyToPump) {
+    // different delays for each pump to accomodate for different tubing lengths & pump speeds
+    digitalWrite(ledGreen, HIGH);
     digitalWrite(ledRed, LOW);
-  } else {
-    digitalWrite(ledRed, HIGH);
+    if ((measure1 != 0) and !busy) {
+      delay(1000);
+      digitalWrite(pumpOne, LOW);
+      busy = true;
+      Serial.println("ingredient one");
+      for (int i = 0; i < measure1; i++) {
+        delay(1100);
+        Serial.println(i);
+      }
+      digitalWrite(pumpOne, HIGH);
+      measure1 = 0;
+      busy = false;
+    }
+    if ((measure2 != 0) and !busy) {
+      delay(1000);
+      digitalWrite(pumpTwo, LOW);
+      busy = true;
+      Serial.println("ingredient two");
+      for (int i = 0; i < measure2; i++) {
+        delay(2000);
+        Serial.println(i);
+      }
+      digitalWrite(pumpTwo, HIGH);
+      measure2 = 0;
+      busy = false;
+    }
+    if ((measure3 != 0) and !busy) {
+      delay(1000);
+      digitalWrite(pumpThree, LOW);
+      busy = true;
+      Serial.println("ingredient two");
+      for (int i = 0; i < measure3; i++) {
+        delay(1750);
+        Serial.println(i);
+      }
+      digitalWrite(pumpThree, HIGH);
+      measure3 = 0;
+      busy = false;
+      readyToPump = false;
+      digitalWrite(ledGreen, LOW);
+      digitalWrite(ledRed, HIGH);
+    }
   }
   
-  // print out the state of the button:
-  delay(1);        // delay in between reads for stability
+  delay(100);        // delay in between reads for stability
 }
